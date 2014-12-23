@@ -10,7 +10,9 @@ var options = {
   nodeLib: false,
   targetES5: true,
   moduleKind: 'commonjs',
-  exitOnError: true
+  exitOnError: true,
+  dstRoot: null,
+  srcRoot: process.cwd
 };
 
 module.exports = function(opts) {
@@ -40,11 +42,13 @@ function isModified(tsname, jsname) {
  */
 function compileTS (module) {
   var exitCode = 0;
-  var tmpDir = path.join(process.cwd(), "tmp", "tsreq");
-  var jsname = path.join(tmpDir, path.basename(module.filename, ".ts") + ".js");
+  var srcPath = path.resolve(module.filename)
+  var dstPath = path.join(options.dstRoot, path.relative(options.srcRoot, module.filename.replace(/.ts$/, '.js')))
+  console.log('src=' + srcPath)
+  console.log('dst=' + dstPath)
 
-  if (!isModified(module.filename, jsname)) {
-    return jsname;
+  if (!isModified(srcPath, dstPath)) {
+    return dstPath;
   }
 
   var argv = [
@@ -54,10 +58,10 @@ function compileTS (module) {
     "--target",
     options.targetES5 ? "ES5" : "ES3", !! options.moduleKind ? "--module" : "", !! options.moduleKind ? options.moduleKind : "",
     "--outDir",
-    tmpDir,
+    options.dstRoot,
     libPath,
     options.nodeLib ? path.resolve(__dirname, "typings/node.d.ts") : null,
-    module.filename
+    srcPath
   ];
 
   var proc = merge(merge({}, process), {
@@ -84,7 +88,7 @@ function compileTS (module) {
     throw new Error('Unable to compile TypeScript file.');
   }
 
-  return jsname;
+  return dstPath;
 }
 
 function runJS (jsname, module) {
