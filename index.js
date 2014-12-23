@@ -44,8 +44,6 @@ function compileTS (module) {
   var exitCode = 0;
   var srcPath = path.resolve(module.filename)
   var dstPath = path.join(options.dstRoot, path.relative(options.srcRoot, module.filename.replace(/.ts$/, '.js')))
-  console.log('src=' + srcPath)
-  console.log('dst=' + dstPath)
 
   if (!isModified(srcPath, dstPath)) {
     return dstPath;
