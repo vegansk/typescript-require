@@ -36,6 +36,22 @@ function isModified(tsname, jsname) {
   return tsMTime > jsMTime;
 }
 
+function findCommonRoot(d1, d2) {
+  var c = '';
+  d1 = path.resolve(d1)
+  d2 = path.resolve(d2)
+
+  var p1 = d1.split(path.sep);
+  var p2 = d2.split(path.sep);
+  for(var i = 0; i < p1.length; i++) {
+    if(p1[i] === p2[i])
+      c = c + p1[i] + path.sep;
+    else
+      break;
+  }
+  return c;
+}
+
 /**
  * Compiles TypeScript file, returns js file path
  * @return {string} js file path
@@ -43,7 +59,9 @@ function isModified(tsname, jsname) {
 function compileTS (module) {
   var exitCode = 0;
   var srcPath = path.resolve(module.filename)
-  var dstPath = path.join(options.dstRoot, path.relative(options.srcRoot, module.filename.replace(/.ts$/, '.js')))
+  var dstRoot = path.resolve(options.dstRoot)
+  var commonRoot = findCommonRoot(srcPath, dstRoot)
+  var dstPath = path.join(options.dstRoot, path.relative(commonRoot, srcPath.replace(/.ts$/, '.js')))
 
   if (!isModified(srcPath, dstPath)) {
     return dstPath;
@@ -56,7 +74,7 @@ function compileTS (module) {
     "--target",
     options.targetES5 ? "ES5" : "ES3", !! options.moduleKind ? "--module" : "", !! options.moduleKind ? options.moduleKind : "",
     "--outDir",
-    options.dstRoot,
+    dstRoot,
     libPath,
     options.nodeLib ? path.resolve(__dirname, "typings/node.d.ts") : null,
     srcPath
